@@ -46,12 +46,18 @@ func OpenTracingClientInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 			gRPCComponentTag,
 		)
 		defer clientSpan.Finish()
+		
+		if hostname, err := os.Hostname(); err == nil {
+			clientSpan.SetTag("TracerHostname", hostname)
+		}else{
+			clientSpan.SetTag("TracerHostname", "Undefined")
+		}
+
 		md, ok := metadata.FromContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
-		}else{
-			md = md.Copy()
 		}
+		
 		mdWriter := metadataReaderWriter{md}
 		err = tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, mdWriter)
 		// We have no better place to record an error than the Span itself :-/

@@ -50,6 +50,12 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		)
 		defer serverSpan.Finish()
 
+		if hostname, err := os.Hostname(); err == nil {
+			serverSpan.SetTag("TracerHostname", hostname)
+		}else{
+			serverSpan.SetTag("TracerHostname", "Undefined")
+		}
+
 		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 		if otgrpcOpts.logPayloads {
 			serverSpan.LogFields(log.Object("gRPC request", req))
